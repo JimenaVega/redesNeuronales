@@ -33,43 +33,41 @@ def readTrafficSigns(rootpath):
         gtFile.close()
     return images, labels
 
-def getTestImages():
+def getTestImages(path):
 
     test_images = []
-    path = os.walk("./test")
-    imagesInD = []
+    test_labels = []
 
     i = 0
-    for root, directories, files in path:
-        imagesInD = files
-        for file in files:
-        
-            path = "./test/{0}".format(file)
-            print(path)
-            the_img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-            the_img = cv2.bitwise_not(the_img)
-            test_images.append(cv2.resize(the_img,(28,28)))
+    #path = './GTSRB_Final_Test_GT/GT-final_test.csv'
+    csvFile = open(path + '/GT-final_test.csv')
+    csvReader = csv.reader(csvFile, delimiter=';')
+    csvReader.__next__()
+
+    for row in csvReader:
+        test_images.append(plt.imread(path + '/' + row[0]))
+        test_labels.append(row[7])
+        i += 1
+    csvFile.close()
             #Para mostrar las imagenes de prueba descomentar:
             # plt.figure(i)
             # plt.imshow(test_images[i], cmap='gray')
-            i += 1
-
 #   plt.show()
+    return test_images, test_labels
+
+# class_names = ['20 sign', '30 sign','50 sign', '60 sign', '70 sign', '80 sign','80 sign', '100 sign', '120 sign', 'two cars']
+
+# for i in range(48-len(class_names)):
+#     class_names.append('other')
 
 
-    return test_images, i, imagesInD
-
-class_names = ['20 sign', '30 sign','50 sign', '60 sign', '70 sign', '80 sign','80 sign', '100 sign', '120 sign', 'two cars']
-
-for i in range(48-len(class_names)):
-    class_names.append('other')
+# In[0]: Tratamiento de las iamgenes
 
 train_images, train_labels = readTrafficSigns('GTSRB/Training')
 
-# In[0]: Tratamiento de las iamgenes
 for i in range(len(train_images)):
 
-	train_images[i] = cv2.cvtColor(train_images[i], cv2.COLOR_BGR2GRAY)
+# train_images[i] = cv2.cvtColor(train_images[i], cv2.COLOR_BGR2GRAY)
 	train_images[i] = cv2.bitwise_not(train_images[i])
 	train_images[i] = cv2.resize(train_images[i],(28,28))
 
@@ -122,7 +120,7 @@ print("----------------------------------------")
 #In[2]: Se entrenará un nuevo modelo con estos datos.
 
 model = keras.Sequential([
-    keras.layers.Flatten(input_shape=(28, 28)),
+    keras.layers.Flatten(input_shape=(28, 28, 3)),
     keras.layers.Dense(128, activation='relu'),
     keras.layers.Dense(dataSetSIZE, activation='softmax')
 ])
@@ -141,13 +139,27 @@ model.fit(train_images, train_labels, epochs=15)
 # para que sea de 28x28 y escala de gris y se usará el modelo para predecir su clase.
 
 
-test_images, numOftestIm, imagesInD = getTestImages()
-test_images = np.array(test_images)
 
-test_labels = []
-for i in range(numOftestIm):
-    test_labels.append(i)
+test_images, test_labels = getTestImages('./GTSRB_Final_Test_Images/GTSRB/Final_Test/Images')
+# testImages_gray = []
+# for image in test_images:
+#     testImages_gray.append(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+
+testImages_resize = []
+for image in test_images:
+    im = cv2.bitwise_not(image)
+    im = cv2.resize(im,(28,28))
+    testImages_resize.append(im)
+
+
+testImages_resize  = np.array(testImages_resize)/255.
+test_images = np.array(testImages_resize)
+
+for i in range(len(test_labels)):
+    test_labels[i] = int(test_labels[i])
 test_labels = np.array(test_labels)
+
+
 
 test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
 #print('\nAccuracy: {0} Loss; {1}'.format(test_acc, test_loss))
@@ -156,7 +168,7 @@ predictions = model.predict(test_images)
 # In[] Predicciones
 print(predictions.shape)
 print("Original     |    Prediction")
-for i in range(numOftestIm):
+# for i in range(len(test_images)):
     
-    pred_label = np.argmax(predictions[i])
-    print(imagesInD[i],  class_names[pred_label], sep="             ")
+#     pred_label = np.argmax(predictions[i])
+#     print(test_images[i],  pred_label, sep="             ")
