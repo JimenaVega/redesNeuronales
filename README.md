@@ -33,8 +33,12 @@ pip3 install keras
 ```
 sudo update & sudo apt install python3-opencv
 ```
+3. Para guardar el modelo
+```
+sudo pip install h5py
+```
 
-3. Descargar dataset de entrenamiento de
+4. Descargar dataset de entrenamiento de
 
 - [Dataset: ](https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/published-archive.html)
  

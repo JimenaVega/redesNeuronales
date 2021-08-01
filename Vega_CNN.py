@@ -17,6 +17,7 @@ import csv
 import cv2
 
 datasize = 43
+class_names = []
 
 def readTrafficSigns(rootpath):
 
@@ -55,13 +56,42 @@ def getTestImages(path):
         i += 1
         
         #if(i > 12000 and i < 1210):print("row[7]: {0} type. {1}".format(row[7], type(row[7])))
-    print("i = ", i)
-    print("sizeof test_labels ", len(test_labels))
+    # print("i = ", i)
+    # print("sizeof test_labels ", len(test_labels))
     csvFile.close()
-#print("INSIDE test_labels.shape = ", test_labels.shape)
  
     return test_images, test_labels
 
+def plot_image(i, predictions_array, true_label, img):
+  predictions_array, true_label, img = predictions_array, true_label[i], img[i]
+  plt.grid(False)
+  plt.xticks([])
+  plt.yticks([])
+
+  plt.imshow(img)
+
+  predicted_label = np.argmax(predictions_array)
+  if predicted_label == true_label:
+    color = 'blue'
+  else:
+    color = 'red'
+
+  plt.xlabel("{} {:2.0f}% ({})".format(class_names[predicted_label],
+                                100*np.max(predictions_array),
+                                class_names[true_label]),
+                                color=color)
+
+def plot_value_array(i, predictions_array, true_label):
+  predictions_array, true_label = predictions_array, true_label[i]
+  plt.grid(False)
+  plt.xticks(range(datasize))
+  plt.yticks([])
+  thisplot = plt.bar(range(datasize), predictions_array, color="#777777")
+  plt.ylim([0, 1])
+  predicted_label = np.argmax(predictions_array)
+
+  thisplot[predicted_label].set_color('red')
+  thisplot[true_label].set_color('blue')
 
 # In[0]: cargado de imagenes
 
@@ -72,15 +102,10 @@ for i in range(len(train_images)):
 	train_images[i] = cv2.bitwise_not(train_images[i])
 	train_images[i] = cv2.resize(train_images[i],(32, 32))
 
-
 train_images = np.array(train_images)
-#train_labels = np.array(train_labels).astype(np.uint8)
-# #train_labels = map(int, train_labels)
+
 train_labels = list(map(int, train_labels))
 train_labels = np.array(train_labels)
-#train_labels = train_labels.astype('int')
-# for i in range(len(train_labels)):
-#     train_labels[i] = int(train_labels[i])
 
 train_images = train_images / 255.0
 
@@ -91,13 +116,12 @@ for i in range(len(test_images)):
     test_images[i] = cv2.resize(test_images[i], (32, 32))
 
 test_images = np.array(test_images) / 255.0
-#test_labels = map(int, test_labels)
 
 test_labels = list(map(int, test_labels))
 test_labels = np.asarray(test_labels)
-#test_labels = train_labels.astype('int')
-#test_labels = np.array(test_labels).astype(np.uint8)
-#map(int, test_labels)
+
+for i in range(datasize):
+    class_names.append(i)
 
 print("----------------------------------------")
 print("DATASET INFO:")
@@ -110,7 +134,7 @@ print("test_images shape: ", test_images.shape)
 print("test_images type: ", type(test_images))
 print("test_labels shape: ", test_labels.shape)
 print("----------------------------------------")
-# # In[1]:
+# In[1]:
 
 model = models.Sequential()
 # 1st convolution layer: 32 filters of 3x3, ReLU activation function
@@ -140,10 +164,12 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-history = model.fit(train_images, train_labels, epochs=20, 
+history = model.fit(train_images, train_labels, epochs=10, 
                     validation_data=(test_images, test_labels))
 
-# In[4]: Evaluar el modelo
+# evaluate the model
+# scores = model.evaluate(test_images, test_labels, verbose=2)
+# print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
 
 plt.plot(history.history['accuracy'], label='accuracy')
 plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
@@ -152,5 +178,14 @@ plt.ylabel('Accuracy')
 plt.ylim([0.5, 1])
 plt.legend(loc='lower right')
 
-test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
-print("accuracy: ", test_acc)
+model.summary()
+
+# serialize model to JSON
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+model.save_weights("model.h5")
+print("Saved model to disk")
+
+
