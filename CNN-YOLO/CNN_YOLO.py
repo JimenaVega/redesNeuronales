@@ -38,7 +38,11 @@ def load_images(path_directory, path_csv, classID):
     data = open(path_csv).read().strip().split("\n")[1:] #leo el archivo .csv y separo las filas en una lista
 
     for (count, values) in enumerate(data): #count=contador - values=valor de cada elemento de data mientras itera
-        (label, image_path) = values.strip().split(',')[-2:] #separo el classID (label) y el path de la imagen
+        
+        line_csv = values.strip().split(';') #separo el classID (label) y el path de la imagen
+        label = line_csv[-1]
+        image_path = line_csv[0] 
+        
 
         if classID=='prohibitory' and label in prohibitory_class:
           image_path = os.path.join(path_directory, image_path) #crea el path completo de la imagen
@@ -61,6 +65,8 @@ def load_images(path_directory, path_csv, classID):
           labels.append(int(label))
         
         elif classID=='mandatory' and label in mandatory_class: 
+        #   print("soy mandatory")
+        #   print('label ={0}| image_path ={1}|'.format(label, image_path))
           image_path = os.path.join(path_directory, image_path) #crea el path completo de la imagen
           image = cv2.imread(image_path) #lee la imagen
           image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -151,99 +157,104 @@ def readTrafficSignsTest(rootpath):
 #-----------------------------------------------------------
 #Import Images
 #-----------------------------------------------------------	   
-  
-trainImages, trainLabels = readTrafficSigns(path_img)
-testImages, test_labels= readTrafficSignsTest(path_img)
 
 
-trainImages_resize = []
+mandatoryImages, mandatoryLabels = load_images(path_img, path_csv, 'mandatory')
+dangerImages, dangerLabels = load_images(path_img, path_csv, 'danger')
+prohibitoryImages, prohibitoryLabels = load_images(path_img, path_csv, 'prohibitory')
+otherImages, otherLabels = load_images(path_img, path_csv, 'other')
 
-for image in trainImages:
-	im = cv2.bitwise_not(image)
-	im = cv2.resize(im,(28,28))
-	trainImages_resize.append(im)
+print("soy danger xd", dangerLabels[0])
+print("soy prohibitory xd", prohibitoryLabels[0])
+# testImages, test_labels= readTrafficSignsTest(path_img)
+# trainImages_resize = []
 
-testImages_resize = []
+# for image in trainImages:
+# 	im = cv2.bitwise_not(image)
+# 	im = cv2.resize(im,(28,28))
+# 	trainImages_resize.append(im)
 
-for image in testImages:
-	im = cv2.bitwise_not(image)
-	im = cv2.resize(im,(28,28))
-	testImages_resize.append(im)
+# testImages_resize = []
 
-trainImages_resize = np.array(trainImages_resize)/255.0
-testImages_resize  = np.array(testImages_resize)/255.0
+# for image in testImages:
+# 	im = cv2.bitwise_not(image)
+# 	im = cv2.resize(im,(28,28))
+# 	testImages_resize.append(im)
 
-# Cast labels of class as int
+# trainImages_resize = np.array(trainImages_resize)/255.0
+# testImages_resize  = np.array(testImages_resize)/255.0
 
-for i in range(len(trainLabels)):
-	trainLabels[i] = int(trainLabels[i])
+# # Cast labels of class as int
 
-for i in range(len(test_labels)):
-	test_labels[i] = int(test_labels[i])
+# for i in range(len(trainLabels)):
+# 	trainLabels[i] = int(trainLabels[i])
 
-
-
-#In[1]
-model = keras.Sequential()
-
-#1º Capa convolucional de 5x5 para aprender características mas generales de la imagen. Se agrega padding para no modificar
-#el tamaño de la imagen y poder aplicar más capas convolucionales luego.
-model.add(keras.layers.Conv2D(64,(5, 5), activation='relu', padding='same', input_shape=(width, height,3)))
-
-#2º Capa convolucional de 64 filtros de 3x3 con activacion ReLu
-model.add(keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'))
-
-#2º capa de pooling con una ventana 2x2
-model.add(keras.layers.MaxPooling2D((2, 2)))
-
-#3º Capa convolucional de 64 filtros de 3x3 con activacion ReLu
-model.add(keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'))
-model.add(keras.layers.BatchNormalization())
-model.add(keras.layers.MaxPooling2D((2, 2)))
-model.add(keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'))
-
-#3º capa de pooling con una ventana 2x2
-model.add(keras.layers.BatchNormalization())
-model.add(keras.layers.MaxPooling2D((2, 2)))
-model.add(keras.layers.Dropout(rate=0.25))
-
-#Vemos un resumen de las capas
-#model.summary()
-
-"""# Añadimos capas densas (clasificador): Una vez que detectamos las principales caracteristicas de cada imagen del set."""
-
-model.add(keras.layers.Flatten())
-model.add(keras.layers.Dense(256))
-model.add(keras.layers.BatchNormalization())
-model.add(keras.layers.Activation('relu'))
-model.add(keras.layers.Dropout(0.2))
-model.add(keras.layers.Dense(128))
-model.add(keras.layers.BatchNormalization())
-model.add(keras.layers.Activation('relu'))
-model.add(keras.layers.Dropout(0.2))
-model.add(keras.layers.Dense(8, activation='softmax'))
-
-epochs = 7
+# for i in range(len(test_labels)):
+# 	test_labels[i] = int(test_labels[i])
 
 
-model.compile(optimizer='adam',
-			  loss='sparse_categorical_crossentropy',
-			  metrics=['accuracy'])
 
-model.summary()
+# #In[1]
+# model = keras.Sequential()
 
-input("Press enter to continue with training")
+# #1º Capa convolucional de 5x5 para aprender características mas generales de la imagen. Se agrega padding para no modificar
+# #el tamaño de la imagen y poder aplicar más capas convolucionales luego.
+# model.add(keras.layers.Conv2D(64,(5, 5), activation='relu', padding='same', input_shape=(width, height,3)))
+
+# #2º Capa convolucional de 64 filtros de 3x3 con activacion ReLu
+# model.add(keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'))
+
+# #2º capa de pooling con una ventana 2x2
+# model.add(keras.layers.MaxPooling2D((2, 2)))
+
+# #3º Capa convolucional de 64 filtros de 3x3 con activacion ReLu
+# model.add(keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'))
+# model.add(keras.layers.BatchNormalization())
+# model.add(keras.layers.MaxPooling2D((2, 2)))
+# model.add(keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'))
+
+# #3º capa de pooling con una ventana 2x2
+# model.add(keras.layers.BatchNormalization())
+# model.add(keras.layers.MaxPooling2D((2, 2)))
+# model.add(keras.layers.Dropout(rate=0.25))
+
+# #Vemos un resumen de las capas
+# #model.summary()
+
+# """# Añadimos capas densas (clasificador): Una vez que detectamos las principales caracteristicas de cada imagen del set."""
+
+# model.add(keras.layers.Flatten())
+# model.add(keras.layers.Dense(256))
+# model.add(keras.layers.BatchNormalization())
+# model.add(keras.layers.Activation('relu'))
+# model.add(keras.layers.Dropout(0.2))
+# model.add(keras.layers.Dense(128))
+# model.add(keras.layers.BatchNormalization())
+# model.add(keras.layers.Activation('relu'))
+# model.add(keras.layers.Dropout(0.2))
+# model.add(keras.layers.Dense(8, activation='softmax'))
+
+# epochs = 7
 
 
-#-----------------------------------------------------------
-# Train Dataset
-#-----------------------------------------------------------
-inicio = time.time()
-history = model.fit(trainImages_resize, np.array(trainLabels), epochs=epochs, validation_data=(testImages_resize, np.array(test_labels)), batch_size=64)
-fin = time.time()
-print(f"\n Tiempo de entrenamiento: {fin - inicio} segundos")
+# model.compile(optimizer='adam',
+# 			  loss='sparse_categorical_crossentropy',
+# 			  metrics=['accuracy'])
 
-# Guardar el Modelo
-model.save('mandatory_signs.h5')
+# model.summary()
 
-test_loss, test_acc = model.evaluate(testImages_resize,  np.array(test_labels), verbose=1)
+# input("Press enter to continue with training")
+
+
+# #-----------------------------------------------------------
+# # Train Dataset
+# #-----------------------------------------------------------
+# inicio = time.time()
+# history = model.fit(trainImages_resize, np.array(trainLabels), epochs=epochs, validation_data=(testImages_resize, np.array(test_labels)), batch_size=64)
+# fin = time.time()
+# print(f"\n Tiempo de entrenamiento: {fin - inicio} segundos")
+
+# # Guardar el Modelo
+# model.save('mandatory_signs.h5')
+
+# test_loss, test_acc = model.evaluate(testImages_resize,  np.array(test_labels), verbose=1)
