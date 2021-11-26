@@ -95,6 +95,7 @@ def load_images(path_directory, path_csv, classID):
     return images, labels
 
 
+        
 
 def relu_bn(inputs: Tensor) -> Tensor:
 	relu = keras.layers.ReLU()(inputs)
@@ -167,46 +168,71 @@ def resize_images(images):
 #-----------------------------------------------------------
 #Import Images
 #-----------------------------------------------------------	   
-# trainImages, trainLabels = readTrafficSigns(path_train_img)
-# testImages, test_labels= readTrafficSignsTest(path_img)
+trainImages, trainLabels = readTrafficSigns(path_train_img)
+testImages, test_labels= readTrafficSignsTest(path_img)
 
+#classID para cada señal de tránsito
+mandatory_class = np.asarray([33,34,35,36,37,38,39,40]).astype(int)
+danger_class = np.asarray([11,18,19,20,21,22,23,24,25,26,27,28,29,30,31]).astype(int)
+prohibitory_class = np.asarray([0,1,2,3,4,5,7,8,9,10,15,16]).astype(int)
+other_class = np.asarray([6,12,13,14,17,32,41,42]).astype(int)
 
-# for i in range(len(trainLabels)):
-# 	print(trainLabels[i])
-# print(len(trainLabels))
+#CLASIFICACION de trainImages en 4 clases diferentes
+mandatoryImages   = []
+dangerImages      = []
+prohibitoryImages = []
+otherImages       = []
+
+mandatoryLabel   = []
+dangerLabel      = []
+prohibitoryLabel = []
+otherLabel       = []
+
+for i in range(len(trainImages)):
+	
+	if(i in mandatory_class):
+		mandatoryImages.append(trainImages[i])
+		mandatoryLabel.append(trainLabels[i])
+	elif (i in danger_class):
+		dangerImages.append(trainImages[i])
+		dangerLabel.append(trainLabels[i])
+	elif (i in prohibitory_class):
+		prohibitoryImages.append(trainImages[i])
+		prohibitoryLabel.append(trainLabels[i])
+	else:
+		otherImages.append(trainImages[i])
+		otherLabel.append(trainLabels[i])
+  
+#CLASIFICACION testImages
+
 #Separacin de imagenes segun las siguientes 4 clases
-# mandatoryImages, mandatoryLabels = load_images(path_img, path_csv, 'mandatory')
-# dangerImages, dangerLabels = load_images(path_img, path_csv, 'danger')
-# prohibitoryImages, prohibitoryLabels = load_images(path_img, path_csv, 'prohibitory')
-# otherImages, otherLabels = load_images(path_img, path_csv, 'other')
+mandatoryImagesTest, mandatoryLabelsTest = load_images(path_img, path_csv, 'mandatory')
+dangerImagesTest, dangerLabelsTest = load_images(path_img, path_csv, 'danger')
+prohibitoryImagesTest, prohibitoryLabelsTest = load_images(path_img, path_csv, 'prohibitory')
+otherImagesTest, otherLabelsTest = load_images(path_img, path_csv, 'other')
 
-# #FALTAN LAS IMAGENES DE TEST
-# # testImages, test_labels= readTrafficSignsTest(path_img)
-# # trainImages_resize = []
+#resize trainImages to 28,28
+mandatoryImages   = resize_images(mandatoryImages)
+dangerImages 	  = resize_images(dangerImages)
+prohibitoryImages = resize_images(prohibitoryImages)
+otherImages       = resize_images(otherImages)
 
-# #resize images to 28,28
-# mandatoryImages   = resize_images(mandatoryImages)
-# dangerImages 	  = resize_images(dangerImages)
-# prohibitoryImages = resize_images(prohibitoryImages)
-# otherImages       = resize_images(otherImages)
+#resize testImages to 28,28
+mandatoryImagesTest   = resize_images(mandatoryImagesTest)
+dangerImagesTest 	  = resize_images(dangerImagesTest)
+prohibitoryImagesTest = resize_images(prohibitoryImagesTest)
+otherImagesTest       = resize_images(otherImagesTest)
 
-# #rescale images
-# mandatoryImages   = np.array(mandatoryImages)/255.0
-# dangerImages 	  = np.array(dangerImages)/255.0
-# prohibitoryImages = np.array(prohibitoryImages)/255.0
-# otherImages       = np.array(otherImages)/255.0
+#rescale images
+mandatoryImages   = np.array(mandatoryImages)/255.0
+dangerImages 	  = np.array(dangerImages)/255.0
+prohibitoryImages = np.array(prohibitoryImages)/255.0
+otherImages       = np.array(otherImages)/255.0
 
-
-# testImages_resize = []
-
-# for image in testImages:
-# 	im = cv2.bitwise_not(image)
-# 	im = cv2.resize(im,(28,28))
-# 	testImages_resize.append(im)
-
-# trainImages_resize = np.array(trainImages_resize)/255.0
-# testImages_resize  = np.array(testImages_resize)/255.0
-
+mandatoryImagesTest   = np.array(mandatoryImagesTest)/255.0
+dangerImagesTest 	  = np.array(dangerImagesTest)/255.0
+prohibitoryImagesTest = np.array(prohibitoryImagesTest)/255.0
+otherImagesTest       = np.array(otherImagesTest)/255.0
 
 
 #In[1]: Red Neuronal Convolucional Optimidaza: Arquitectura 2
