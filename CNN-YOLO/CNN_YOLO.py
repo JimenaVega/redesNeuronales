@@ -20,6 +20,7 @@ import os
 
 path_img = '/home/paprika/Documents/Redes_Neuronales/datasets/GTSRB_Final_Test_Images-idk/GTSRB/Final_Test/Images'
 path_csv = '/home/paprika/Documents/Redes_Neuronales/datasets/GTSRB_Final_Test_Images-idk/GTSRB/Final_Test/Images/GT-final_test.csv'
+path_train_img = '/home/paprika/Documents/Redes_Neuronales/datasets/GTSRB_Final_Training_Images/GTSRB/Final_Training/Images'
 width  = 64 
 height = 64
 
@@ -84,8 +85,8 @@ def load_images(path_directory, path_csv, classID):
           
           #Actualizo la lista de imagenes y de labels
           images.append(image)
-          #labels.append(int(label))
-          labels.append(label)
+          labels.append(int(label))
+          #labels.append(label)
         
 
     images = np.asarray(images).astype(float)/255 #convierte las imagenes finales en arreglo numpy para facilitar el manejo posterior
@@ -154,25 +155,47 @@ def readTrafficSignsTest(rootpath):
 	gtFile.close()
 	return images, labels
 
+def resize_images(images):
+	resized_images = []
+ 
+	for image in images:
+		im = cv2.bitwise_not(image)
+		im = cv2.resize(im,(28,28))
+		resized_images.append(im)
+  
+	return resized_images
 #-----------------------------------------------------------
 #Import Images
 #-----------------------------------------------------------	   
-
-
-mandatoryImages, mandatoryLabels = load_images(path_img, path_csv, 'mandatory')
-dangerImages, dangerLabels = load_images(path_img, path_csv, 'danger')
-prohibitoryImages, prohibitoryLabels = load_images(path_img, path_csv, 'prohibitory')
-otherImages, otherLabels = load_images(path_img, path_csv, 'other')
-
-print("soy danger xd", dangerLabels[0])
-print("soy prohibitory xd", prohibitoryLabels[0])
+# trainImages, trainLabels = readTrafficSigns(path_train_img)
 # testImages, test_labels= readTrafficSignsTest(path_img)
-# trainImages_resize = []
 
-# for image in trainImages:
-# 	im = cv2.bitwise_not(image)
-# 	im = cv2.resize(im,(28,28))
-# 	trainImages_resize.append(im)
+
+# for i in range(len(trainLabels)):
+# 	print(trainLabels[i])
+# print(len(trainLabels))
+#Separacin de imagenes segun las siguientes 4 clases
+# mandatoryImages, mandatoryLabels = load_images(path_img, path_csv, 'mandatory')
+# dangerImages, dangerLabels = load_images(path_img, path_csv, 'danger')
+# prohibitoryImages, prohibitoryLabels = load_images(path_img, path_csv, 'prohibitory')
+# otherImages, otherLabels = load_images(path_img, path_csv, 'other')
+
+# #FALTAN LAS IMAGENES DE TEST
+# # testImages, test_labels= readTrafficSignsTest(path_img)
+# # trainImages_resize = []
+
+# #resize images to 28,28
+# mandatoryImages   = resize_images(mandatoryImages)
+# dangerImages 	  = resize_images(dangerImages)
+# prohibitoryImages = resize_images(prohibitoryImages)
+# otherImages       = resize_images(otherImages)
+
+# #rescale images
+# mandatoryImages   = np.array(mandatoryImages)/255.0
+# dangerImages 	  = np.array(dangerImages)/255.0
+# prohibitoryImages = np.array(prohibitoryImages)/255.0
+# otherImages       = np.array(otherImages)/255.0
+
 
 # testImages_resize = []
 
@@ -184,73 +207,36 @@ print("soy prohibitory xd", prohibitoryLabels[0])
 # trainImages_resize = np.array(trainImages_resize)/255.0
 # testImages_resize  = np.array(testImages_resize)/255.0
 
-# # Cast labels of class as int
-
-# for i in range(len(trainLabels)):
-# 	trainLabels[i] = int(trainLabels[i])
-
-# for i in range(len(test_labels)):
-# 	test_labels[i] = int(test_labels[i])
 
 
+#In[1]: Red Neuronal Convolucional Optimidaza: Arquitectura 2
 
-# #In[1]
-# model = keras.Sequential()
 
-# #1º Capa convolucional de 5x5 para aprender características mas generales de la imagen. Se agrega padding para no modificar
-# #el tamaño de la imagen y poder aplicar más capas convolucionales luego.
-# model.add(keras.layers.Conv2D(64,(5, 5), activation='relu', padding='same', input_shape=(width, height,3)))
-
-# #2º Capa convolucional de 64 filtros de 3x3 con activacion ReLu
-# model.add(keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'))
-
-# #2º capa de pooling con una ventana 2x2
-# model.add(keras.layers.MaxPooling2D((2, 2)))
-
-# #3º Capa convolucional de 64 filtros de 3x3 con activacion ReLu
-# model.add(keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'))
-# model.add(keras.layers.BatchNormalization())
-# model.add(keras.layers.MaxPooling2D((2, 2)))
-# model.add(keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'))
-
-# #3º capa de pooling con una ventana 2x2
-# model.add(keras.layers.BatchNormalization())
-# model.add(keras.layers.MaxPooling2D((2, 2)))
-# model.add(keras.layers.Dropout(rate=0.25))
-
-# #Vemos un resumen de las capas
-# #model.summary()
-
-# """# Añadimos capas densas (clasificador): Una vez que detectamos las principales caracteristicas de cada imagen del set."""
-
-# model.add(keras.layers.Flatten())
-# model.add(keras.layers.Dense(256))
-# model.add(keras.layers.BatchNormalization())
-# model.add(keras.layers.Activation('relu'))
-# model.add(keras.layers.Dropout(0.2))
-# model.add(keras.layers.Dense(128))
-# model.add(keras.layers.BatchNormalization())
-# model.add(keras.layers.Activation('relu'))
-# model.add(keras.layers.Dropout(0.2))
-# model.add(keras.layers.Dense(8, activation='softmax'))
-
+# model = keras.Sequential([
+# 	keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 3)),
+# 	keras.layers.MaxPooling2D((2, 2)),
+# 	keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'),
+# 	keras.layers.MaxPooling2D((2, 2)),
+# 	keras.layers.DepthwiseConv2D(kernel_size=(3,3), padding="valid", strides=(1, 1), depth_multiplier= 10, activation='relu'),
+# 	keras.layers.Flatten(),
+# 	keras.layers.Dropout(0.4),
+# 	keras.layers.Dense(50, activation='sigmoid'),
+# 	keras.layers.Dropout(0.4),
+# 	keras.layers.Dense(43, activation='softmax')
+# ])
 # epochs = 7
-
+# model.summary()
 
 # model.compile(optimizer='adam',
 # 			  loss='sparse_categorical_crossentropy',
 # 			  metrics=['accuracy'])
 
-# model.summary()
-
-# input("Press enter to continue with training")
-
-
+# plot_model(model, to_file='CNN.png')
 # #-----------------------------------------------------------
 # # Train Dataset
 # #-----------------------------------------------------------
 # inicio = time.time()
-# history = model.fit(trainImages_resize, np.array(trainLabels), epochs=epochs, validation_data=(testImages_resize, np.array(test_labels)), batch_size=64)
+# history = model.fit(mandatoryImages, np.array(mandatoryLabels), epochs=epochs, validation_data=(testImages_resize, np.array(test_labels)), batch_size=64)
 # fin = time.time()
 # print(f"\n Tiempo de entrenamiento: {fin - inicio} segundos")
 
@@ -258,3 +244,4 @@ print("soy prohibitory xd", prohibitoryLabels[0])
 # model.save('mandatory_signs.h5')
 
 # test_loss, test_acc = model.evaluate(testImages_resize,  np.array(test_labels), verbose=1)
+# %%
